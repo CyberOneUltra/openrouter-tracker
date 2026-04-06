@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenRouter Token Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1a1a2e;min-height:100vh}
+.hdr{background:linear-gradient(135deg,#ffffff,#f0f0f3);border-bottom:1px solid #e0e0e6;padding:20px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.hdr h1{font-size:20px;font-weight:700}
+.hdr-right{display:flex;align-items:center;gap:16px}
+.meta{font-size:12px;color:#999;text-align:right}
+.box{max-width:1400px;margin:0 auto;padding:24px 32px}
+.tabs{display:flex;gap:2px;margin-bottom:20px;background:#fff;border-radius:10px;padding:3px;width:fit-content;border:1px solid #e0e0e6}
+.tab{padding:7px 20px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;border:none;background:transparent;color:#999;transition:all .2s}
+.tab.on{background:#e8e8ed;color:#60a5fa}
+.tab:hover:not(.on){color:#1a1a2e}
+.sec{background:#fff;border-radius:14px;padding:20px;margin-bottom:20px;border:1px solid #e0e0e6}
+.sec h2{font-size:15px;font-weight:600;margin-bottom:2px}
+.sec .sub{font-size:12px;color:#999;margin-bottom:14px}
+.cw{position:relative;height:380px}
+.leg{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;justify-content:center}
+.li{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:16px;cursor:pointer;font-size:12px;font-weight:500;background:#f0f0f3;border:2px solid transparent;transition:all .15s;user-select:none}
+.li:hover{background:#e0e0e8}
+.li.off{opacity:.3}
+.dt{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;border-bottom:2px solid #e0e0e6;color:#666;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+td{padding:8px 12px;border-bottom:1px solid #e0e0e6}
+tr:hover td{background:#f8f8fa}
+.nr{text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:768px){.hdr{padding:14px 16px;flex-direction:column;gap:8px}.hdr-right{width:100%;justify-content:space-between}.box{padding:16px}.cw{height:280px}.dp{flex-direction:column;align-items:flex-start}}
+.dp{display:flex;align-items:center;gap:6px}
+.dp input[type=date]{padding:5px 8px;border:1px solid #e0e0e6;border-radius:6px;background:#fff;color:#1a1a2e;font-size:12px;font-family:inherit}
+.dp span{font-size:12px;color:#999}
+.db{padding:5px 14px;border:1px solid #60a5fa;border-radius:6px;background:#60a5fa22;color:#60a5fa;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.db:hover{background:#60a5fa44}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <h1>📊 OpenRouter Token Tracker</h1>
+  <div class="hdr-right">
+    <div class="meta">
+      <div>更新: 2026/4/6 13:31:37</div>
+      <div>2 天数据 · 每日 7 款模型</div>
+    </div>
+  </div>
+</div>
+<div class="box">
+  <div class="tabs">
+    <button class="tab on" data-v="daily" onclick="go('daily')">Daily</button>
+    <button class="tab" data-v="week" onclick="go('week')">Weekly</button>
+  </div>
+  <div class="sec">
+    <h2 id="t1"></h2>
+    <p class="sub" id="s1"></p>
+    <div class="cw"><canvas id="c1"></canvas></div>
+    <div class="leg" id="leg"></div>
+  </div>
+  <div class="sec">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div><h2 style="display:inline">详细数据</h2><span class="sub" style="margin-left:8px">日 Tokens 调用量</span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="db" onclick="toggleRank()" id="rankBtn">Rank ↓</button>
+        <div class="dp"><input type="date" id="df" value=""><span>至</span><input type="date" id="dt" value=""><button class="db" onclick="applyRange()">确定</button></div>
+      </div>
+    </div>
+    <div style="overflow-x:auto"><table id="tbl"></table></div>
+  </div>
+</div>
+<script>
+const MC={"xiaomi/mimo-v2-pro-20260318":{"name":"MiMo v2 Pro","short":"MiMo Pro","color":"#FF6B35"},"xiaomi/mimo-v2-omni-20260318":{"name":"MiMo v2 Omni","short":"MiMo Omni","color":"#E91E63"},"xiaomi/mimo-v2-flash-20251210":{"name":"MiMo v2 Flash","short":"MiMo Flash","color":"#9C27B0"},"minimax/minimax-m2.7-20260318":{"name":"MiniMax 2.7","short":"MiniMax","color":"#2196F3"},"deepseek/deepseek-v3.2-20251201":{"name":"DeepSeek v3.2","short":"DeepSeek","color":"#4CAF50"},"moonshotai/kimi-k2.5-0127":{"name":"Kimi 2.5","short":"Kimi","color":"#FF9800"},"z-ai/glm-5-turbo-20260315":{"name":"GLM-5 Turbo","short":"GLM-5","color":"#00BCD4"}};
+const DL={"2026-04-04":{"deepseek/deepseek-v3.2-20251201":{"tokens":162772721210,"prompt":157749940300,"completion":5022780910,"reasoning":200835119,"requests":15319644},"z-ai/glm-5-turbo-20260315":{"tokens":53054786738,"prompt":52632260937,"completion":422525801,"reasoning":74051422,"requests":894978},"xiaomi/mimo-v2-flash-20251210":{"tokens":22443135572,"prompt":21998557408,"completion":444578164,"reasoning":71490979,"requests":1431068},"moonshotai/kimi-k2.5-0127":{"tokens":68230208724,"prompt":66805242976,"completion":1424965748,"reasoning":840865346,"requests":1992577},"xiaomi/mimo-v2-omni-20260318":{"tokens":5741156173,"prompt":5651619540,"completion":89536633,"reasoning":48493196,"requests":191613},"minimax/minimax-m2.7-20260318":{"tokens":70160732435,"prompt":69333030402,"completion":827702033,"reasoning":369718692,"requests":1991196},"xiaomi/mimo-v2-pro-20260318":{"tokens":39829358813,"prompt":39471429093,"completion":357929720,"reasoning":118602342,"requests":734542}},"2026-04-03":{"xiaomi/mimo-v2-flash-20251210":{"tokens":31241083516,"prompt":30398822652,"completion":842260864,"reasoning":72638657},"moonshotai/kimi-k2.5-0127":{"tokens":96252750877,"prompt":94472978473,"completion":1779772404,"reasoning":1080881096},"deepseek/deepseek-v3.2-20251201":{"tokens":171305993898,"prompt":165749230037,"completion":5556763861,"reasoning":252176168},"minimax/minimax-m2.7-20260318":{"tokens":193790108260,"prompt":191000627531,"completion":2789480729,"reasoning":1126027728},"z-ai/glm-5-turbo-20260315":{"tokens":68757378299,"prompt":68239086372,"completion":518291927,"reasoning":90374481},"xiaomi/mimo-v2-pro-20260318":{"tokens":153292762465,"prompt":152428089304,"completion":864673161,"reasoning":313673624},"xiaomi/mimo-v2-omni-20260318":{"tokens":12543809337,"prompt":12410871247,"completion":132938090,"reasoning":70215723}},"2026-04-05":{"moonshotai/kimi-k2.5-0127":{"tokens":114684300505,"prompt":113068270829,"completion":1616029676,"reasoning":862867474,"requests":2899082},"minimax/minimax-m2.7-20260318":{"tokens":112548145953,"prompt":111007913980,"completion":1540231973,"reasoning":683633203,"requests":2950321},"xiaomi/mimo-v2-flash-20251210":{"tokens":24826242036,"prompt":24338206632,"completion":488035404,"reasoning":71634561,"requests":1786585},"deepseek/deepseek-v3.2-20251201":{"tokens":167316232189,"prompt":162207032932,"completion":5109199257,"reasoning":190016272,"requests":15770538},"xiaomi/mimo-v2-omni-20260318":{"tokens":5765127471,"prompt":5663546276,"completion":101581195,"reasoning":50729697,"requests":203323},"z-ai/glm-5-turbo-20260315":{"tokens":52377976049,"prompt":52080237582,"completion":297738467,"reasoning":82876550,"requests":785706},"xiaomi/mimo-v2-pro-20260318":{"tokens":38724847778,"prompt":38385737021,"completion":339110757,"reasoning":113112016,"requests":747315}}};
+const WL={"2026-04-04":{"xiaomi/mimo-v2-flash-20251210":{"tokens":191441913332,"prompt":186429341559,"completion":5012571773,"reasoning":71490979,"requests":33450381},"moonshotai/kimi-k2.5-0127":{"tokens":550949034315,"prompt":538346095459,"completion":12602938856,"reasoning":840865346,"requests":17761128},"xiaomi/mimo-v2-pro-20260318":{"tokens":3732134528858,"prompt":3697707233097,"completion":34427295761,"reasoning":118602342,"requests":52435762},"minimax/minimax-m2.7-20260318":{"tokens":1242142425870,"prompt":1223919595292,"completion":18222830578,"reasoning":369718692,"requests":28982796},"deepseek/deepseek-v3.2-20251201":{"tokens":1200264652238,"prompt":1162610125112,"completion":37654527126,"reasoning":200835119,"requests":114576607},"xiaomi/mimo-v2-omni-20260318":{"tokens":459388707836,"prompt":456825294574,"completion":2563413262,"reasoning":48493196,"requests":6521831},"z-ai/glm-5-turbo-20260315":{"tokens":749618501502,"prompt":745534391620,"completion":4084109882,"reasoning":74051422,"requests":9715340}},"2026-04-05":{"moonshotai/kimi-k2.5-0127":{"tokens":601059425417,"prompt":588547151231,"completion":12512274186,"reasoning":862867474,"requests":18549762},"xiaomi/mimo-v2-flash-20251210":{"tokens":180129850990,"prompt":175507026679,"completion":4622824311,"reasoning":71634561,"requests":28030199},"deepseek/deepseek-v3.2-20251201":{"tokens":1188575531940,"prompt":1151322005195,"completion":37253526745,"reasoning":190016272,"requests":114146401},"minimax/minimax-m2.7-20260318":{"tokens":1193268514189,"prompt":1176098657224,"completion":17169856965,"reasoning":683633203,"requests":28221476},"xiaomi/mimo-v2-pro-20260318":{"tokens":3077424954738,"prompt":3050525505322,"completion":26899449416,"reasoning":113112016,"requests":42673746},"xiaomi/mimo-v2-omni-20260318":{"tokens":385505802999,"prompt":383219583324,"completion":2286219675,"reasoning":50729697,"requests":5672930},"z-ai/glm-5-turbo-20260315":{"tokens":667186088478,"prompt":663354559658,"completion":3831528820,"reasoning":82876550,"requests":9112550}}};
+const DD=["2026-04-03","2026-04-04","2026-04-05"];
+const WD=["2026-04-04","2026-04-05"];
+let vw='daily',ch1=null,hd=new Set(),customRange=null,ranked=false;
+
+function gridC(){return '#e0e0e6'}
+function tickC(){return '#999'}
+function ptBorder(){return '#ffffff'}
+function tipBg(){return '#ffffffee'}
+function tipTx(){return '#1a1a2e'}
+function tipBd(){return '#d0d0d8'}
+
+function ft(n){if(n>=1e12)return(n/1e12).toFixed(2)+'T';if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return''+n}
+
+function getData(){
+  if(vw==='daily'){
+    if(customRange){
+      const out={};
+      for(const dt of DD){if(DL[dt]&&dt>=customRange.from&&dt<=customRange.to)out[dt]=DL[dt]}
+      return out;
+    }
+    const out={};for(const dt of DD){if(DL[dt])out[dt]=DL[dt]}return out;
+  }
+  const out={};for(const dt of WD.slice(-7)){if(WL[dt])out[dt]=WL[dt]}return out;
+}
+
+function mkC(cv,ds,lb,key,formatter){
+  return new Chart(cv.getContext('2d'),{type:'line',data:{labels:lb,datasets:ds.filter(d=>!hd.has(d.s)).map(d=>({
+    label:d.l,data:d[key],borderColor:d.c,backgroundColor:d.c+'18',borderWidth:2.5,
+    pointRadius:lb.length>1?4:7,pointHoverRadius:6,pointBackgroundColor:d.c,
+    pointBorderColor:ptBorder(),pointBorderWidth:2,tension:.35,fill:true
+  }))},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+  plugins:{legend:{display:false},tooltip:{backgroundColor:tipBg(),titleColor:tipTx(),bodyColor:tipTx(),
+    borderColor:tipBd(),borderWidth:1,padding:10,bodyFont:{size:12},
+    callbacks:{label:c=>c.dataset.label+': '+formatter(c.parsed.y)}}},
+  scales:{x:{grid:{color:gridC(),drawBorder:false},ticks:{color:tickC(),font:{size:11}}},
+    y:{grid:{color:gridC(),drawBorder:false},ticks:{color:tickC(),font:{size:11},callback:v=>formatter(v)},beginAtZero:true}}}});
+}
+
+function render(){
+  const bk=getData();
+  const ds2=Object.keys(bk).sort();
+  const lb=ds2.map(d=>d.substring(5));
+  const ds=[];
+  for(const[s,c]of Object.entries(MC)){
+    ds.push({s,l:c.short,c:c.color,
+      tk:ds2.map(d=>bk[d]?.[s]?.tokens||0)
+    });
+  }
+  const vl=vw==='daily'?'每日趋势':'每周趋势';
+  document.getElementById('t1').textContent='Token 调用量 — '+vl;
+  document.getElementById('s1').textContent=vw==='daily'?'每日各模型 Token 消耗量（Prompt + Completion）':'每周各模型 Token 消耗总量';
+  if(ch1)ch1.destroy();
+  ch1=mkC(document.getElementById('c1'),ds,lb,'tk',ft);
+  const lg=document.getElementById('leg');lg.innerHTML='';
+  for(const d of ds){
+    const el=document.createElement('div');
+    el.className='li'+(hd.has(d.s)?' off':'');
+    el.innerHTML='<span class="dt" style="background:'+d.c+'"></span>'+d.l;
+    el.onclick=()=>{if(hd.has(d.s))hd.delete(d.s);else if(hd.size<Object.keys(MC).length-1)hd.add(d.s);render()};
+    lg.appendChild(el);
+  }
+  renderTable();
+}
+
+function renderTable(){
+  const from=document.getElementById('df').value;
+  const to=document.getElementById('dt').value;
+  const dates=DD.filter(d=>(!from||d>=from)&&(!to||d<=to)).sort();
+
+  // Compute totals per model
+  const totals={};
+  for(const s of Object.keys(MC)){totals[s]=0;}
+  for(const d of dates){
+    for(const s of Object.keys(MC)){
+      const e=DL[d]?.[s];
+      if(e)totals[s]+=e.tokens;
+    }
+  }
+
+  // Sort models: keep original order or rank by total
+  let models=Object.entries(MC);
+  if(ranked){models.sort((a,b)=>totals[b[0]]-totals[a[0]]);}
+
+  const tbl=document.getElementById('tbl');
+  let h='<tr><th>日期</th>';for(const[,c]of models)h+='<th class="nr">'+c.short+'</th>';h+='</tr>';
+  let b='';
+  for(const d of [...dates].reverse()){
+    b+='<tr><td>'+d+'</td>';
+    for(const[s]of models){const e=DL[d]?.[s];b+='<td class="nr">'+(e?ft(e.tokens):'—')+'</td>';}
+    b+='</tr>';
+  }
+  // Total row
+  b+='<tr style="font-weight:700;border-top:2px solid #e0e0e6"><td>Total</td>';
+  for(const[s]of models){b+='<td class="nr">'+(totals[s]?ft(totals[s]):'—')+'</td>';}
+  b+='</tr>';
+  tbl.innerHTML=h+b;
+}
+
+function toggleRank(){
+  ranked=!ranked;
+  document.getElementById('rankBtn').innerHTML=ranked?'Rank ↓':'Rank';
+  document.getElementById('rankBtn').style.background=ranked?'#60a5fa':'#60a5fa22';
+  document.getElementById('rankBtn').style.color=ranked?'#fff':'#60a5fa';
+  renderTable();
+}
+
+function applyRange(){
+  const from=document.getElementById('df').value;
+  const to=document.getElementById('dt').value;
+  if(from&&to){customRange={from,to};}else{customRange=null;}
+  render();
+}
+
+function initDatePicker(){
+  const all=DD.sort();
+  if(!all.length)return;
+  const end=all[all.length-1];
+  const startIdx=Math.max(0,all.length-7);
+  document.getElementById('df').value=all[startIdx];
+  document.getElementById('dt').value=end;
+  document.getElementById('df').min=all[0];
+  document.getElementById('df').max=end;
+  document.getElementById('dt').min=all[0];
+  document.getElementById('dt').max=end;
+}
+
+function go(v){vw=v;customRange=null;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===v));initDatePicker();render()}
+initDatePicker();render();
+</script>
+</body>
+</html>
