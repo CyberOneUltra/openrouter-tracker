@@ -13,14 +13,29 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
 
-      - name: Run scraper
-        run: node scraper.js
+      - name: Run scraper (with retry)
+        run: |
+          MAX_RETRIES=3
+          RETRY_DELAY=60
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "🔄 Attempt $i/$MAX_RETRIES..."
+            if node scraper.js; then
+              echo "✅ Scraper succeeded on attempt $i"
+              exit 0
+            fi
+            if [ $i -lt $MAX_RETRIES ]; then
+              echo "⏳ Failed. Retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
+          echo "❌ Scraper failed after $MAX_RETRIES attempts"
+          exit 1
 
       - name: Commit & push
         run: |
