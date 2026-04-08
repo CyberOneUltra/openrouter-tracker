@@ -4,6 +4,8 @@ on:
   schedule:
     # UTC 1:05 = CST 9:05
     - cron: '5 1 * * *'
+    - cron: '15 1 * * *'     
+    - cron: '25 1 * * *'  
   workflow_dispatch: # 手动触发
 
 permissions:
