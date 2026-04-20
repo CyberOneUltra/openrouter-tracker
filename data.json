@@ -808,6 +808,57 @@
         "reasoning": 85485394,
         "requests": 820102
       }
+    },
+    "2026-04-19": {
+      "xiaomi/mimo-v2-flash-20251210": {
+        "tokens": 23352386094,
+        "prompt": 22518540775,
+        "completion": 833845319,
+        "reasoning": 24384526,
+        "requests": 2245908
+      },
+      "minimax/minimax-m2.7-20260318": {
+        "tokens": 111390933296,
+        "prompt": 109134829036,
+        "completion": 2256104260,
+        "reasoning": 981167000,
+        "requests": 3139606
+      },
+      "deepseek/deepseek-v3.2-20251201": {
+        "tokens": 187328134853,
+        "prompt": 181595951927,
+        "completion": 5732182926,
+        "reasoning": 373980405,
+        "requests": 17472547
+      },
+      "z-ai/glm-5-turbo-20260315": {
+        "tokens": 29943833249,
+        "prompt": 29633377541,
+        "completion": 310455708,
+        "reasoning": 60859258,
+        "requests": 628681
+      },
+      "xiaomi/mimo-v2-omni-20260318": {
+        "tokens": 7245519094,
+        "prompt": 7048622189,
+        "completion": 196896905,
+        "reasoning": 112814827,
+        "requests": 257209
+      },
+      "xiaomi/mimo-v2-pro-20260318": {
+        "tokens": 157966464271,
+        "prompt": 156981296244,
+        "completion": 985168027,
+        "reasoning": 285310272,
+        "requests": 2296779
+      },
+      "moonshotai/kimi-k2.5-0127": {
+        "tokens": 37973147408,
+        "prompt": 36854861967,
+        "completion": 1118285441,
+        "reasoning": 631671133,
+        "requests": 1381890
+      }
     }
   },
   "weekly": {
@@ -1575,7 +1626,58 @@
         "reasoning": 710846260,
         "requests": 14752413
       }
+    },
+    "2026-04-19": {
+      "xiaomi/mimo-v2-pro-20260318": {
+        "tokens": 1149648170447,
+        "prompt": 1142794334135,
+        "completion": 6853836312,
+        "reasoning": 285310272,
+        "requests": 16597838
+      },
+      "xiaomi/mimo-v2-omni-20260318": {
+        "tokens": 58255034110,
+        "prompt": 57234948063,
+        "completion": 1020086047,
+        "reasoning": 112814827,
+        "requests": 2072242
+      },
+      "deepseek/deepseek-v3.2-20251201": {
+        "tokens": 1281035947444,
+        "prompt": 1235961395100,
+        "completion": 45074552344,
+        "reasoning": 373980405,
+        "requests": 126002705
+      },
+      "z-ai/glm-5-turbo-20260315": {
+        "tokens": 281067476391,
+        "prompt": 276710579439,
+        "completion": 4356896952,
+        "reasoning": 60859258,
+        "requests": 7939321
+      },
+      "xiaomi/mimo-v2-flash-20251210": {
+        "tokens": 145850136561,
+        "prompt": 137796633219,
+        "completion": 8053503342,
+        "reasoning": 24384526,
+        "requests": 14683422
+      },
+      "minimax/minimax-m2.7-20260318": {
+        "tokens": 960792495333,
+        "prompt": 944864388287,
+        "completion": 15928107046,
+        "reasoning": 981167000,
+        "requests": 27200508
+      },
+      "moonshotai/kimi-k2.5-0127": {
+        "tokens": 391200280765,
+        "prompt": 379936397391,
+        "completion": 11263883374,
+        "reasoning": 631671133,
+        "requests": 14495348
+      }
     }
   },
-  "lastUpdated": "2026-04-19T06:57:08.185Z"
+  "lastUpdated": "2026-04-20T07:31:26.166Z"
 }
